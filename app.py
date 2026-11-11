@@ -1,5 +1,20 @@
 import streamlit as st
 from document_processor import extract_pdf_text
+import json
+from dashboard import show_dashboard
+
+from support_manager import (
+    create_support_ticket,
+    clear_conversation
+)
+
+import json
+
+from support_manager import (
+    create_support_ticket,
+    clear_conversation
+)
+
 from chatbot import generate_response
 from chunking import create_chunks
 from vector_store import build_vector_index
@@ -18,6 +33,12 @@ st.set_page_config(
 st.title("🤖 AI Customer Support Chatbot")
 st.write("Welcome! Ask us anything about our products or services.")
 
+# CUSTOMER SUPPORT DASHBOARD
+
+with st.expander("📊 View Application Dashboard"):
+
+    show_dashboard()
+    
 # Initialize session state variables safely
 if "company_documents" not in st.session_state:
     st.session_state["company_documents"] = []
@@ -60,6 +81,20 @@ if "messages" not in st.session_state:
 
 # COMPANY DOCUMENT UPLOAD (Sidebar)
 st.sidebar.header("📚 Company Knowledge Base")
+
+# CONVERSATION MANAGEMENT
+
+st.sidebar.divider()
+
+st.sidebar.header("💬 Conversation Management")
+
+if st.sidebar.button("🔄 Start New Conversation"):
+
+    st.session_state.messages = clear_conversation()
+
+    st.session_state.pop("support_ticket", None)
+
+    st.rerun()
 
 uploaded_documents = st.sidebar.file_uploader(
     "Upload company PDF documents",
@@ -192,7 +227,25 @@ if user_question := st.chat_input("Type your question here..."):
 
                 # STEP 4: Display AI response
                 st.write(assistant_response)
+                # HUMAN SUPPORT ESCALATION
 
+                if (
+                    "human" in user_question.lower()
+                    or "agent" in user_question.lower()
+                    or "representative" in user_question.lower()
+                ):
+
+                    ticket = create_support_ticket(
+                        customer_message=user_question,
+                        conversation_history=st.session_state.messages
+                    )
+
+                    st.session_state["support_ticket"] = ticket
+
+                    st.warning(
+                        "Your request has been prepared for human support review. "
+                        "No support agent has been contacted automatically."
+                    )
                 # STEP 5: Save assistant response
                 st.session_state.messages.append({
                     "role": "assistant",
@@ -202,3 +255,36 @@ if user_question := st.chat_input("Type your question here..."):
             except Exception as error:
 
                 st.error(f"AI response failed: {error}")
+            
+            # SUPPORT TICKET DISPLAY
+
+            if "support_ticket" in st.session_state:
+
+                st.divider()
+
+                st.subheader("🎫 Human Support Request")
+
+                ticket = st.session_state["support_ticket"]
+
+                st.write(f"**Ticket ID:** {ticket['ticket_id']}")
+
+                st.write(f"**Status:** {ticket['status']}")
+
+                st.write(f"**Created:** {ticket['created_at']}")
+
+                st.write("**Customer Message:**")
+
+                st.write(ticket["customer_message"])
+
+                ticket_json = json.dumps(
+                    ticket,
+                    indent=4,
+                    ensure_ascii=False
+                )
+
+                st.download_button(
+                    label="Download Support Ticket",
+                    data=ticket_json,
+                    file_name=f"{ticket['ticket_id']}.json",
+                    mime="application/json"
+                )
