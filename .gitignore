@@ -1,0 +1,62 @@
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Streamlit cache
+.streamlit/cache/
+
+# Uploaded documents and user data
+uploads/
+data/
+documents/
+
+# Generated files
+*.log
+*.tmp
+*.bak
+*.db
+*.sqlite3
+
+# AI models and vector databases
+models/
+vector_store/
+faiss_index/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+
+# Saved company knowledge base
+knowledge_base/
